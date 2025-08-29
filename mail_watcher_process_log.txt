@@ -1,0 +1,86 @@
+08-29 17:18 : starting (cwd : /Users/sub/Dropbox/plex_downloader_repo/plex_downloder)
+08-29 17:19 : starting (cwd : /Users/sub/Dropbox/plex_downloader_repo/plex_downloder)
+08-29 17:20 : starting (cwd : /Users/sub/Dropbox/plex_downloader_repo/plex_downloder)
+08-29 17:23 : starting (cwd : /Users/sub/Dropbox/plex_downloader_repo/plex_downloder)
+08-29 17:23 : logging in as plexspotdownloader@gmail.com
+08-29 17:23 : searching for unseen emails: result=OK, data=[b'58']
+08-29 17:23 : New Email Received!
+Subject: 
+Body: https://open.spotify.com/album/6pCLvgEb0INbO0WaN2Byyw?si=CjUwqu6FRdKEdr0weC3uUw
+08-29 17:23 : Processing URL: https://open.spotify.com/album/6pCLvgEb0INbO0WaN2Byyw?si=CjUwqu6FRdKEdr0weC3uUw
+08-29 17:23 : Running ['python', '-m', 'spotdl', '--output', "'{artist}/{album}/{track-number} - {title}.{output-ext}'", 'https://open.spotify.com/album/6pCLvgEb0INbO0WaN2Byyw?si=CjUwqu6FRdKEdr0weC3uUw']
+08-29 17:23 : Process failed with return code 1 for https://open.spotify.com/album/6pCLvgEb0INbO0WaN2Byyw?si=CjUwqu6FRdKEdr0weC3uUw
+08-29 17:24 : starting (cwd : /Users/sub/Dropbox/plex_downloader_repo/plex_downloder)
+08-29 17:24 : logging in as plexspotdownloader@gmail.com
+08-29 17:24 : searching for unseen emails: result=OK, data=[b'58']
+08-29 17:24 : New Email Received!
+Subject: 
+Body: https://open.spotify.com/album/6pCLvgEb0INbO0WaN2Byyw?si=CjUwqu6FRdKEdr0weC3uUw
+08-29 17:24 : Processing URL: https://open.spotify.com/album/6pCLvgEb0INbO0WaN2Byyw?si=CjUwqu6FRdKEdr0weC3uUw
+08-29 17:24 : Running ['python', '-m', 'spotdl', '--output', "'{artist}/{album}/{track-number} - {title}.{output-ext}'", 'https://open.spotify.com/album/6pCLvgEb0INbO0WaN2Byyw?si=CjUwqu6FRdKEdr0weC3uUw']
+08-29 17:24 : Process failed with return code 1 for https://open.spotify.com/album/6pCLvgEb0INbO0WaN2Byyw?si=CjUwqu6FRdKEdr0weC3uUw
+08-29 17:25 : starting (cwd : /Users/sub/Dropbox/plex_downloader_repo/plex_downloder)
+08-29 17:25 : logging in as plexspotdownloader@gmail.com
+08-29 17:25 : searching for unseen emails: result=OK, data=[b'']
+08-29 17:26 : starting (cwd : /Users/sub/Dropbox/plex_downloader_repo/plex_downloder)
+08-29 17:26 : logging in as plexspotdownloader@gmail.com
+08-29 17:26 : searching for unseen emails: result=OK, data=[b'58']
+08-29 17:26 : New Email Received!
+Subject: 
+Body: https://open.spotify.com/album/6pCLvgEb0INbO0WaN2Byyw?si=CjUwqu6FRdKEdr0weC3uUw
+08-29 17:26 : Processing URL: https://open.spotify.com/album/6pCLvgEb0INbO0WaN2Byyw?si=CjUwqu6FRdKEdr0weC3uUw
+08-29 17:26 : Running ['python', '-m', 'spotdl', '--output', "'{artist}/{album}/{track-number} - {title}.{output-ext}'", '--lyrics-provider None', 'https://open.spotify.com/album/6pCLvgEb0INbO0WaN2Byyw?si=CjUwqu6FRdKEdr0weC3uUw']
+08-29 17:26 : Process failed with return code 2 for https://open.spotify.com/album/6pCLvgEb0INbO0WaN2Byyw?si=CjUwqu6FRdKEdr0weC3uUw
+08-29 17:27 : starting (cwd : /Users/sub/Dropbox/plex_downloader_repo/plex_downloder)
+08-29 17:27 : logging in as plexspotdownloader@gmail.com
+08-29 17:27 : searching for unseen emails: result=OK, data=[b'58']
+08-29 17:27 : New Email Received!
+Subject: 
+Body: https://open.spotify.com/album/6pCLvgEb0INbO0WaN2Byyw?si=CjUwqu6FRdKEdr0weC3uUw
+08-29 17:27 : Processing URL: https://open.spotify.com/album/6pCLvgEb0INbO0WaN2Byyw?si=CjUwqu6FRdKEdr0weC3uUw
+08-29 17:27 : Running ['python', '-m', 'spotdl', 'download', 'https://open.spotify.com/album/6pCLvgEb0INbO0WaN2Byyw?si=CjUwqu6FRdKEdr0weC3uUw', '--output', '{artist}/{album}/{track-number} - {title}.{output-ext}', '--lyrics-provider', 'None']
+08-29 17:27 : Process failed with return code 2 for https://open.spotify.com/album/6pCLvgEb0INbO0WaN2Byyw?si=CjUwqu6FRdKEdr0weC3uUw
+08-29 17:32 : starting (cwd : /Users/sub/Dropbox/plex_downloader_repo/plex_downloder)
+08-29 17:32 : logging in as plexspotdownloader@gmail.com
+08-29 17:32 : searching for unseen emails: result=OK, data=[b'58']
+08-29 17:32 : New Email Received!
+Subject: 
+Body: https://open.spotify.com/album/6pCLvgEb0INbO0WaN2Byyw?si=CjUwqu6FRdKEdr0weC3uUw
+08-29 17:32 : Processing URL: https://open.spotify.com/album/6pCLvgEb0INbO0WaN2Byyw?si=CjUwqu6FRdKEdr0weC3uUw
+08-29 17:32 : Running ['python', '-m', 'spotdl', '--output', "'{artist}/{album}/{track-number} - {title}.{output-ext}'", 'https://open.spotify.com/album/6pCLvgEb0INbO0WaN2Byyw?si=CjUwqu6FRdKEdr0weC3uUw']
+08-29 17:32 : Process failed with return code 1 for https://open.spotify.com/album/6pCLvgEb0INbO0WaN2Byyw?si=CjUwqu6FRdKEdr0weC3uUw
+08-29 17:33 : starting (cwd : /Users/sub/Dropbox/plex_downloader_repo/plex_downloder)
+08-29 17:33 : logging in as plexspotdownloader@gmail.com
+08-29 17:33 : searching for unseen emails: result=OK, data=[b'58']
+08-29 17:33 : New Email Received!
+Subject: 
+Body: https://open.spotify.com/album/6pCLvgEb0INbO0WaN2Byyw?si=CjUwqu6FRdKEdr0weC3uUw
+08-29 17:33 : Processing URL: https://open.spotify.com/album/6pCLvgEb0INbO0WaN2Byyw?si=CjUwqu6FRdKEdr0weC3uUw
+08-29 17:33 : Running ['python', '-m', 'spotdl', '--output', "'{artist}/{album}/{track-number} - {title}.{output-ext}'", 'https://open.spotify.com/album/6pCLvgEb0INbO0WaN2Byyw?si=CjUwqu6FRdKEdr0weC3uUw']
+08-29 17:33 : Process failed with return code 1 for https://open.spotify.com/album/6pCLvgEb0INbO0WaN2Byyw?si=CjUwqu6FRdKEdr0weC3uUw
+08-29 17:40 : starting (cwd : /Users/sub/Dropbox/plex_downloader_repo/plex_downloder)
+08-29 17:40 : logging in as plexspotdownloader@gmail.com
+08-29 17:40 : searching for unseen emails: result=OK, data=[b'58']
+08-29 17:40 : New Email Received!
+Subject: 
+Body: https://open.spotify.com/album/6pCLvgEb0INbO0WaN2Byyw?si=CjUwqu6FRdKEdr0weC3uUw
+08-29 17:40 : Processing URL: https://open.spotify.com/album/6pCLvgEb0INbO0WaN2Byyw?si=CjUwqu6FRdKEdr0weC3uUw
+08-29 17:40 : Running ['python', '-m', 'spotdl', '--output', "'{artist}/{album}/{track-number} - {title}.{output-ext}'", 'https://open.spotify.com/album/6pCLvgEb0INbO0WaN2Byyw?si=CjUwqu6FRdKEdr0weC3uUw', '--lyrics', 'genius musixmatch']
+08-29 17:40 : Process failed with return code 2 for https://open.spotify.com/album/6pCLvgEb0INbO0WaN2Byyw?si=CjUwqu6FRdKEdr0weC3uUw
+08-29 17:41 : starting (cwd : /Users/sub/Dropbox/plex_downloader_repo/plex_downloder)
+08-29 17:41 : logging in as plexspotdownloader@gmail.com
+08-29 17:41 : searching for unseen emails: result=OK, data=[b'58']
+08-29 17:41 : New Email Received!
+Subject: 
+Body: https://open.spotify.com/album/6pCLvgEb0INbO0WaN2Byyw?si=CjUwqu6FRdKEdr0weC3uUw
+08-29 17:41 : Processing URL: https://open.spotify.com/album/6pCLvgEb0INbO0WaN2Byyw?si=CjUwqu6FRdKEdr0weC3uUw
+08-29 17:41 : Running ['python', '-m', 'spotdl', '--output', "'{artist}/{album}/{track-number} - {title}.{output-ext}'", 'https://open.spotify.com/album/6pCLvgEb0INbO0WaN2Byyw?si=CjUwqu6FRdKEdr0weC3uUw', '--lyrics', 'genius', 'musixmatch']
+08-29 17:43 : Process completed successfully for https://open.spotify.com/album/6pCLvgEb0INbO0WaN2Byyw?si=CjUwqu6FRdKEdr0weC3uUw
+08-29 17:55 : starting (cwd : /Users/sub/Dropbox/plex_downloader_repo/plex_downloder)
+08-29 17:55 : logging in as plexspotdownloader@gmail.com
+08-29 17:55 : searching for unseen emails: result=OK, data=[b'58']
+08-29 17:55 : New Email Received!
+Subject: 
+Body: https://open.spotify.com/album/6pCLvgEb0INbO0WaN2Byyw?si=CjUwqu6FRdKEdr0weC3uUw
+08-29 17:55 : Processing URL: https://open.spotify.com/album/6pCLvgEb0INbO0WaN2Byyw?si=CjUwqu6FRdKEdr0weC3uUw
+08-29 17:55 : Running ['python', '-m', 'spotdl', '--output', '{artist}/{album}/{track-number} - {title}.{output-ext}', 'https://open.spotify.com/album/6pCLvgEb0INbO0WaN2Byyw?si=CjUwqu6FRdKEdr0weC3uUw', '--lyrics', 'genius', 'musixmatch']
