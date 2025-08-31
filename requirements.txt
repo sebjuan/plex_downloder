@@ -1,0 +1,4 @@
+# Main dependencies for Plex Downloader
+spotdl==4.4.1
+yt-dlp==2025.8.27
+
