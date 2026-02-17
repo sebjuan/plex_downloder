@@ -15,10 +15,10 @@ import os
 
 cwd = os.getcwd()
 
-# Define the folder variable
-folder = ""
+# Use the script's directory for log file
+SCRIPT_DIR = Path(__file__).parent.absolute()
 
-LOG_FILE_PATH = Path(folder) / "mail_watcher_process_log.txt"
+LOG_FILE_PATH = SCRIPT_DIR / "mail_watcher_process_log.txt"
 
 # Create a custom logger
 logger = logging.getLogger("custom_logger")
