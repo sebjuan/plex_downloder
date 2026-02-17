@@ -6,7 +6,7 @@ set -e
 
 REPO_URL="https://github.com/sebjuan/plex_downloder.git"
 INSTALL_DIR="/home/seb/plex_downloader"
-MUSIC_OUTPUT="/home/seb/Music"
+MUSIC_OUTPUT="/mnt/media/Music"
 VENV_NAME="spotdl_venv"
 LOG_FILE="/home/seb/plex_downloader_startup.log"
 
