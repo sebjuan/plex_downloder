@@ -122,54 +122,69 @@ def get_youtube_url_from_odesli(spotify_url):
         return None
 
 
-def get_spotify_anonymous_token():
-    """Get an anonymous access token from Spotify's web player"""
+def get_album_tracks_from_embed(album_id):
+    """Get track IDs from a Spotify album by parsing the embed page"""
     import urllib.request
-    import json
+    import re
 
     try:
+        url = f"https://open.spotify.com/embed/album/{album_id}"
         req = urllib.request.Request(
-            "https://open.spotify.com/get_access_token?reason=transport&productType=web_player",
+            url,
             headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
         )
-        with urllib.request.urlopen(req, timeout=10) as response:
-            data = json.loads(response.read().decode())
-            return data.get('accessToken')
+        with urllib.request.urlopen(req, timeout=15) as response:
+            html = response.read().decode()
+
+        # Extract track URIs from the embedded JSON data
+        track_pattern = r'"uri":"spotify:track:([a-zA-Z0-9]+)"'
+        track_ids = re.findall(track_pattern, html)
+
+        # Remove duplicates while preserving order
+        seen = set()
+        unique_tracks = []
+        for track_id in track_ids:
+            if track_id not in seen:
+                seen.add(track_id)
+                unique_tracks.append(f"https://open.spotify.com/track/{track_id}")
+
+        logger.info(f"Found {len(unique_tracks)} tracks in album (from embed page)")
+        return unique_tracks
     except Exception as e:
-        logger.info(f"Failed to get Spotify anonymous token: {e}")
-        return None
-
-
-def get_album_tracks_from_spotify(album_id):
-    """Get track IDs from a Spotify album using anonymous web API"""
-    import urllib.request
-    import json
-
-    token = get_spotify_anonymous_token()
-    if not token:
+        logger.info(f"Failed to get album tracks from embed: {e}")
         return []
 
+
+def get_playlist_tracks_from_embed(playlist_id):
+    """Get track IDs from a Spotify playlist by parsing the embed page"""
+    import urllib.request
+    import re
+
     try:
+        url = f"https://open.spotify.com/embed/playlist/{playlist_id}"
         req = urllib.request.Request(
-            f"https://api.spotify.com/v1/albums/{album_id}/tracks?limit=50",
-            headers={
-                'Authorization': f'Bearer {token}',
-                'User-Agent': 'Mozilla/5.0'
-            }
+            url,
+            headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
         )
         with urllib.request.urlopen(req, timeout=15) as response:
-            data = json.loads(response.read().decode())
+            html = response.read().decode()
 
-        track_urls = []
-        for item in data.get('items', []):
-            track_id = item.get('id')
-            if track_id:
-                track_urls.append(f"https://open.spotify.com/track/{track_id}")
+        # Extract track URIs from the embedded JSON data
+        track_pattern = r'"uri":"spotify:track:([a-zA-Z0-9]+)"'
+        track_ids = re.findall(track_pattern, html)
 
-        logger.info(f"Found {len(track_urls)} tracks in album")
-        return track_urls
+        # Remove duplicates while preserving order
+        seen = set()
+        unique_tracks = []
+        for track_id in track_ids:
+            if track_id not in seen:
+                seen.add(track_id)
+                unique_tracks.append(f"https://open.spotify.com/track/{track_id}")
+
+        logger.info(f"Found {len(unique_tracks)} tracks in playlist (from embed page)")
+        return unique_tracks
     except Exception as e:
-        logger.info(f"Failed to get album tracks: {e}")
+        logger.info(f"Failed to get playlist tracks from embed: {e}")
         return []
 
 
@@ -218,10 +233,33 @@ def try_yt_dlp_search(url, output_folder):
         logger.info(f"Detected Spotify {url_type}: {spotify_id}")
 
         if url_type == 'album':
-            # Get all tracks from the album
-            track_urls = get_album_tracks_from_spotify(spotify_id)
+            # Get all tracks from the album via embed page
+            track_urls = get_album_tracks_from_embed(spotify_id)
             if track_urls:
                 logger.info(f"Processing {len(track_urls)} tracks from album")
+                success_count = 0
+                for i, track_url in enumerate(track_urls):
+                    logger.info(f"Track {i+1}/{len(track_urls)}: {track_url}")
+                    yt_url = get_youtube_url_from_odesli(track_url)
+                    if yt_url:
+                        if download_track_via_yt_dlp(yt_url, output_folder):
+                            success_count += 1
+                    else:
+                        logger.info(f"Could not get YouTube URL for track {i+1}")
+                    sleep(0.5)
+
+                if success_count > 0:
+                    logger.info(f"Album download: {success_count}/{len(track_urls)} tracks successful")
+                    return True
+                logger.info("Album download failed - no tracks downloaded")
+            else:
+                logger.info("Could not get track list from album")
+
+        elif url_type == 'playlist':
+            # Get all tracks from the playlist via embed page
+            track_urls = get_playlist_tracks_from_embed(spotify_id)
+            if track_urls:
+                logger.info(f"Processing {len(track_urls)} tracks from playlist")
                 success_count = 0
                 for i, track_url in enumerate(track_urls):
                     logger.info(f"Track {i+1}/{len(track_urls)}: {track_url}")
@@ -235,13 +273,13 @@ def try_yt_dlp_search(url, output_folder):
                     sleep(0.5)
 
                 if success_count > 0:
-                    logger.info(f"Album download: {success_count}/{len(track_urls)} tracks successful")
+                    logger.info(f"Playlist download: {success_count}/{len(track_urls)} tracks successful")
                     return True
-                logger.info("Album download failed - no tracks downloaded")
+                logger.info("Playlist download failed - no tracks downloaded")
             else:
-                logger.info("Could not get track list from album")
+                logger.info("Could not get track list from playlist")
 
-        # For single tracks (or if album extraction failed)
+        # For single tracks (or if album/playlist extraction failed)
         yt_url = get_youtube_url_from_odesli(url)
         if yt_url:
             logger.info(f"Got YouTube URL from Odesli: {yt_url}")
