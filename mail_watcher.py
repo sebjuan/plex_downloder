@@ -95,12 +95,66 @@ def try_spotdl(url, output_folder):
     return True
 
 
-def try_yt_dlp_search(url, output_folder):
-    """Method 2: Use spotdl to get track info, then download via yt-dlp YouTube search"""
-    logger.info("Trying Method 2: spotdl info + yt-dlp download")
+def get_youtube_url_from_odesli(spotify_url):
+    """Use Odesli/Songlink API to convert Spotify URL to YouTube URL"""
+    import urllib.request
+    import urllib.parse
+    import json
 
     try:
-        # First, use spotdl to get track info (doesn't hit rate limit as hard)
+        encoded_url = urllib.parse.quote(spotify_url, safe='')
+        api_url = f"https://api.song.link/v1-alpha.1/links?url={encoded_url}"
+        logger.info(f"Querying Odesli API: {api_url}")
+
+        req = urllib.request.Request(api_url, headers={'User-Agent': 'Mozilla/5.0'})
+        with urllib.request.urlopen(req, timeout=15) as response:
+            data = json.loads(response.read().decode())
+
+        # Try to get YouTube Music URL first, then regular YouTube
+        if 'linksByPlatform' in data:
+            if 'youtubeMusic' in data['linksByPlatform']:
+                return data['linksByPlatform']['youtubeMusic']['url']
+            if 'youtube' in data['linksByPlatform']:
+                return data['linksByPlatform']['youtube']['url']
+        return None
+    except Exception as e:
+        logger.info(f"Odesli API error: {e}")
+        return None
+
+
+def try_yt_dlp_search(url, output_folder):
+    """Method 2: Use Odesli API to get YouTube URL, then download via yt-dlp"""
+    logger.info("Trying Method 2: Odesli API + yt-dlp download")
+
+    try:
+        # Try to get YouTube URL from Odesli
+        yt_url = get_youtube_url_from_odesli(url)
+
+        if yt_url:
+            logger.info(f"Got YouTube URL from Odesli: {yt_url}")
+            cli_cmd = [
+                sys.executable,
+                "-m",
+                "yt_dlp",
+                "--extract-audio",
+                "--audio-format", "mp3",
+                "--audio-quality", "0",
+                "-o", f"{output_folder}/%(artist)s/%(album)s/%(track_number)s - %(title)s.%(ext)s",
+                yt_url,
+            ]
+            logger.info(f"Running: {' '.join(cli_cmd)}")
+            result = subprocess.run(cli_cmd, capture_output=True, text=True, timeout=600)
+            if result.stdout:
+                logger.info(f"yt-dlp stdout: {result.stdout[:500]}")
+            if result.stderr:
+                logger.info(f"yt-dlp stderr: {result.stderr[:500]}")
+            if result.returncode == 0:
+                logger.info("yt-dlp completed successfully")
+                return True
+            logger.info(f"yt-dlp failed with return code {result.returncode}")
+
+        # Fallback: try spotdl url command (may timeout if rate limited)
+        logger.info("Trying spotdl url command for YouTube URLs...")
         info_cmd = [
             sys.executable,
             "-m",
@@ -108,7 +162,6 @@ def try_yt_dlp_search(url, output_folder):
             "url",
             url,
         ]
-        logger.info(f"Getting track info: {' '.join(info_cmd)}")
         info_result = subprocess.run(info_cmd, capture_output=True, text=True, timeout=30)
 
         # Extract YouTube URLs from spotdl output
@@ -140,34 +193,13 @@ def try_yt_dlp_search(url, output_folder):
                 logger.info(f"yt-dlp downloaded {success_count}/{len(yt_urls)} tracks")
                 return True
 
-        # Fallback: try YouTube search with the URL as query (may not work well)
-        logger.info("No YouTube URLs from spotdl, trying direct YouTube search")
-        cli_cmd = [
-            sys.executable,
-            "-m",
-            "yt_dlp",
-            "--extract-audio",
-            "--audio-format", "mp3",
-            "--audio-quality", "0",
-            "-o", f"{output_folder}/%(artist)s/%(album)s/%(track_number)s - %(title)s.%(ext)s",
-            f"ytsearch:{url}",
-        ]
-        logger.info(f"Running: {' '.join(cli_cmd)}")
-        result = subprocess.run(cli_cmd, capture_output=True, text=True, timeout=300)
-        if result.stdout:
-            logger.info(f"yt-dlp stdout: {result.stdout[:500]}")
-        if result.stderr:
-            logger.info(f"yt-dlp stderr: {result.stderr[:500]}")
-        if result.returncode == 0:
-            logger.info("yt-dlp completed successfully")
-            return True
-        logger.info(f"yt-dlp failed with return code {result.returncode}")
+        logger.info("All fallback methods failed")
         return False
     except subprocess.TimeoutExpired:
-        logger.info("yt-dlp timed out")
+        logger.info("Download timed out")
         return False
     except Exception as e:
-        logger.info(f"yt-dlp search failed: {e}")
+        logger.info(f"yt-dlp fallback failed: {e}")
         return False
 
 
