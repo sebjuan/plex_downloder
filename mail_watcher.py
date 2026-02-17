@@ -44,6 +44,52 @@ EMAIL = "plexspotdownloader@gmail.com"
 PASSWORD = "xwiw vqgg hthn uuim"
 
 
+def is_youtube_url(url):
+    """Check if URL is a YouTube or YouTube Music URL"""
+    return any(domain in url.lower() for domain in [
+        'youtube.com', 'youtu.be', 'music.youtube.com'
+    ])
+
+
+def is_spotify_url(url):
+    """Check if URL is a Spotify URL"""
+    return 'spotify.com' in url.lower() or 'spotify:' in url.lower()
+
+
+def try_youtube_download(url, output_folder):
+    """Download directly from YouTube/YouTube Music via yt-dlp"""
+    logger.info("Downloading from YouTube/YouTube Music")
+    cli_cmd = [
+        sys.executable,
+        "-m",
+        "yt_dlp",
+        "--extract-audio",
+        "--audio-format", "mp3",
+        "--audio-quality", "0",
+        "--embed-thumbnail",
+        "-o", f"{output_folder}/%(artist)s/%(album)s/%(playlist_index)s - %(title)s.%(ext)s",
+        url,
+    ]
+    logger.info(f"Running: {' '.join(cli_cmd)}")
+    try:
+        result = subprocess.run(cli_cmd, capture_output=True, text=True, timeout=1800)  # 30 min for large playlists
+        if result.stdout:
+            logger.info(f"yt-dlp stdout: {result.stdout[:500]}")
+        if result.stderr:
+            logger.info(f"yt-dlp stderr: {result.stderr[:500]}")
+        if result.returncode == 0:
+            logger.info("YouTube download completed successfully")
+            return True
+        logger.info(f"yt-dlp failed with return code {result.returncode}")
+        return False
+    except subprocess.TimeoutExpired:
+        logger.info("YouTube download timed out after 30 minutes")
+        return False
+    except Exception as e:
+        logger.info(f"YouTube download failed: {e}")
+        return False
+
+
 def try_spotdl(url, output_folder):
     """Method 1: Try spotdl (Python)"""
     logger.info("Trying Method 1: spotdl (Python)")
@@ -327,35 +373,47 @@ def try_yt_dlp_search(url, output_folder):
 
 
 def process_email(subject, body, output_folder):
-    """Define actions when an email is received. Try multiple download methods."""
+    """Define actions when an email is received. Route to appropriate downloader."""
     msg = f"New Email Received!\nSubject: {subject}\nBody: {body}"
     logger.info(msg)
     logger.info(f"Processing URL: {body}")
 
-    # List of download methods to try in order
-    methods = [
-        ("spotdl", try_spotdl),
-        ("yt-dlp search", try_yt_dlp_search),
-    ]
-
+    url = body.strip()
     success = False
-    for method_name, method_func in methods:
-        try:
-            logger.info(f"Attempting download with: {method_name}")
-            if method_func(body, output_folder):
-                logger.info(f"SUCCESS: Downloaded with {method_name}")
-                success = True
-                break
-            else:
-                logger.info(f"FAILED: {method_name} did not work, trying next method...")
-        except Exception as e:
-            logger.info(f"ERROR: {method_name} raised exception: {e}")
-            continue
+
+    # Route based on URL type
+    if is_youtube_url(url):
+        # YouTube/YouTube Music - download directly via yt-dlp
+        logger.info("Detected YouTube/YouTube Music URL")
+        success = try_youtube_download(url, output_folder)
+    elif is_spotify_url(url):
+        # Spotify - try spotdl first, then Odesli fallback
+        logger.info("Detected Spotify URL")
+        methods = [
+            ("spotdl", try_spotdl),
+            ("Odesli + yt-dlp", try_yt_dlp_search),
+        ]
+        for method_name, method_func in methods:
+            try:
+                logger.info(f"Attempting download with: {method_name}")
+                if method_func(url, output_folder):
+                    logger.info(f"SUCCESS: Downloaded with {method_name}")
+                    success = True
+                    break
+                else:
+                    logger.info(f"FAILED: {method_name} did not work, trying next method...")
+            except Exception as e:
+                logger.info(f"ERROR: {method_name} raised exception: {e}")
+                continue
+    else:
+        # Unknown URL type - try yt-dlp as generic handler
+        logger.info("Unknown URL type, trying yt-dlp")
+        success = try_youtube_download(url, output_folder)
 
     if success:
-        logger.info(f"Process completed successfully for {body}")
+        logger.info(f"Process completed successfully for {url}")
     else:
-        logger.info(f"ALL METHODS FAILED for {body}")
+        logger.info(f"ALL METHODS FAILED for {url}")
 
 
 def check_email(output_folder):
