@@ -3,7 +3,7 @@ import email
 from time import sleep
 
 from pathlib import Path
-import shutil  # For moving files
+import shutil
 import subprocess
 from datetime import datetime
 import argparse
@@ -15,15 +15,9 @@ import os
 
 cwd = os.getcwd()
 
-
 # Define the folder variable
-# folder = "/DATA/Media/Music/spotify_albums_links"
 folder = ""
-# destination_folder = folder
 
-# Path to the links, downloaded links, and log files
-# LINKS_FILE_PATH = Path(folder) / "links.txt"
-# DONLOADED_LINKS_FILEPATH = Path(folder) / "downloaded_links.txt"
 LOG_FILE_PATH = Path(folder) / "mail_watcher_process_log.txt"
 
 # Create a custom logger
@@ -31,8 +25,8 @@ logger = logging.getLogger("custom_logger")
 logger.setLevel(logging.INFO)
 
 # Create handlers
-file_handler = logging.FileHandler(LOG_FILE_PATH)  # Log to a file
-console_handler = logging.StreamHandler()  # Log to the console
+file_handler = logging.FileHandler(LOG_FILE_PATH)
+console_handler = logging.StreamHandler()
 
 # Create a formatter
 formatter = logging.Formatter("%(asctime)s : %(message)s", datefmt="%m-%d %H:%M")
@@ -40,60 +34,126 @@ formatter = logging.Formatter("%(asctime)s : %(message)s", datefmt="%m-%d %H:%M"
 file_handler.setFormatter(formatter)
 console_handler.setFormatter(formatter)
 
-
 # Add the handlers to the logger
 logger.addHandler(file_handler)
 logger.addHandler(console_handler)
 
-
 # Configuration
-IMAP_SERVER = "imap.gmail.com"  # Replace with your email provider's IMAP server
+IMAP_SERVER = "imap.gmail.com"
 EMAIL = "plexspotdownloader@gmail.com"
 PASSWORD = "xwiw vqgg hthn uuim"
-# CHECK_INTERVAL = 30  # Seconds
 
 
-def process_email(subject, body, output_folder):
-    """Define actions when an email is received."""
-    msg = f"New Email Received!\nSubject: {subject}\nBody: {body}"
-    logger.info(msg)
-    logger.info(f"Processing URL: {body}")
-
+def try_spotdl(url, output_folder):
+    """Method 1: Try spotdl (Python)"""
+    logger.info("Trying Method 1: spotdl (Python)")
     cli_cmd = [
         sys.executable,
         "-m",
         "spotdl",
         "download",
-        body,
+        url,
         "--output",
         f"{output_folder}/{{artist}}/{{album}}/{{track-number}} - {{title}}.{{output-ext}}",
     ]
+    logger.info(f"Running: {' '.join(cli_cmd)}")
+    result = subprocess.run(cli_cmd, capture_output=True, text=True)
 
-    """cli_cmd = [
-        "python",
-        "-m",
-        "spotdl",
-        "download",  # operation must come first
-        body,  # Spotify URL
-        "--output",
-        "{artist}/{album}/{track-number} - {title}.{output-ext}",  # no extra quotes
-        #"--lyrics-provider",
-        "None",  # split into separate elements
-    ]"""
+    # Check for rate limit or API errors
+    if result.returncode != 0:
+        error_output = result.stderr + result.stdout
+        if "rate" in error_output.lower() or "403" in error_output or "limit" in error_output.lower():
+            logger.info(f"spotdl failed with rate limit/API error")
+            return False
+        if "SpotifyException" in error_output or "user may not be registered" in error_output:
+            logger.info(f"spotdl failed with Spotify API error")
+            return False
 
-    # cli_cmd = ["python3", "-m", "spotdl", "--output", "{artist}/{album}/{track-number} - {title}.{output-ext}", url]
-    logger.info(f"Running {cli_cmd}")
+    return result.returncode == 0
 
-    result = subprocess.run(cli_cmd)  # , cwd=folder)
 
-    print(f"result : {result}")
+def try_spotify_dl_node(url, output_folder):
+    """Method 2: Try spotify-dl (NodeJS)"""
+    logger.info("Trying Method 2: spotify-dl (NodeJS)")
+    cli_cmd = [
+        "spotify-dl",
+        "-o", output_folder,
+        url,
+    ]
+    logger.info(f"Running: {' '.join(cli_cmd)}")
+    try:
+        result = subprocess.run(cli_cmd, capture_output=True, text=True, timeout=600)
+        if result.returncode == 0:
+            return True
+        logger.info(f"spotify-dl (NodeJS) failed: {result.stderr[:200] if result.stderr else 'no error output'}")
+        return False
+    except FileNotFoundError:
+        logger.info("spotify-dl (NodeJS) not installed")
+        return False
+    except subprocess.TimeoutExpired:
+        logger.info("spotify-dl (NodeJS) timed out")
+        return False
 
-    # Check if the subprocess completed successfully
-    if result.returncode == 0:
+
+def try_yt_dlp_search(url, output_folder):
+    """Method 3: Extract track info and search YouTube directly with yt-dlp"""
+    logger.info("Trying Method 3: yt-dlp direct search")
+
+    # Extract track/album ID from Spotify URL
+    # For now, just try to search YouTube for the URL content
+    # This is a fallback that may not work perfectly
+
+    try:
+        # Use yt-dlp to search YouTube Music
+        cli_cmd = [
+            sys.executable,
+            "-m",
+            "yt_dlp",
+            "--extract-audio",
+            "--audio-format", "mp3",
+            "--audio-quality", "0",
+            "-o", f"{output_folder}/%(artist)s/%(album)s/%(track_number)s - %(title)s.%(ext)s",
+            f"ytsearch:{url}",  # Search YouTube for the URL
+        ]
+        logger.info(f"Running: {' '.join(cli_cmd)}")
+        result = subprocess.run(cli_cmd, capture_output=True, text=True, timeout=300)
+        return result.returncode == 0
+    except Exception as e:
+        logger.info(f"yt-dlp search failed: {e}")
+        return False
+
+
+def process_email(subject, body, output_folder):
+    """Define actions when an email is received. Try multiple download methods."""
+    msg = f"New Email Received!\nSubject: {subject}\nBody: {body}"
+    logger.info(msg)
+    logger.info(f"Processing URL: {body}")
+
+    # List of download methods to try in order
+    methods = [
+        ("spotdl", try_spotdl),
+        ("spotify-dl (NodeJS)", try_spotify_dl_node),
+        ("yt-dlp search", try_yt_dlp_search),
+    ]
+
+    success = False
+    for method_name, method_func in methods:
+        try:
+            logger.info(f"Attempting download with: {method_name}")
+            if method_func(body, output_folder):
+                logger.info(f"SUCCESS: Downloaded with {method_name}")
+                success = True
+                break
+            else:
+                logger.info(f"FAILED: {method_name} did not work, trying next method...")
+        except Exception as e:
+            logger.info(f"ERROR: {method_name} raised exception: {e}")
+            continue
+
+    if success:
         logger.info(f"Process completed successfully for {body}")
-
     else:
-        logger.info(f"Process failed with return code {result.returncode} for {body}")
+        logger.info(f"ALL METHODS FAILED for {body}")
 
 
 def check_email(output_folder):
