@@ -96,15 +96,52 @@ def try_spotdl(url, output_folder):
 
 
 def try_yt_dlp_search(url, output_folder):
-    """Method 3: Extract track info and search YouTube directly with yt-dlp"""
-    logger.info("Trying Method 3: yt-dlp direct search")
-
-    # Extract track/album ID from Spotify URL
-    # For now, just try to search YouTube for the URL content
-    # This is a fallback that may not work perfectly
+    """Method 2: Use spotdl to get track info, then download via yt-dlp YouTube search"""
+    logger.info("Trying Method 2: spotdl info + yt-dlp download")
 
     try:
-        # Use yt-dlp to search YouTube Music
+        # First, use spotdl to get track info (doesn't hit rate limit as hard)
+        info_cmd = [
+            sys.executable,
+            "-m",
+            "spotdl",
+            "url",
+            url,
+        ]
+        logger.info(f"Getting track info: {' '.join(info_cmd)}")
+        info_result = subprocess.run(info_cmd, capture_output=True, text=True, timeout=30)
+
+        # Extract YouTube URLs from spotdl output
+        yt_urls = []
+        for line in info_result.stdout.split('\n'):
+            line = line.strip()
+            if line.startswith('http') and ('youtube.com' in line or 'youtu.be' in line):
+                yt_urls.append(line)
+
+        if yt_urls:
+            logger.info(f"Found {len(yt_urls)} YouTube URLs from spotdl")
+            success_count = 0
+            for yt_url in yt_urls:
+                cli_cmd = [
+                    sys.executable,
+                    "-m",
+                    "yt_dlp",
+                    "--extract-audio",
+                    "--audio-format", "mp3",
+                    "--audio-quality", "0",
+                    "-o", f"{output_folder}/%(artist)s/%(album)s/%(track_number)s - %(title)s.%(ext)s",
+                    yt_url,
+                ]
+                logger.info(f"Downloading: {yt_url}")
+                result = subprocess.run(cli_cmd, capture_output=True, text=True, timeout=300)
+                if result.returncode == 0:
+                    success_count += 1
+            if success_count > 0:
+                logger.info(f"yt-dlp downloaded {success_count}/{len(yt_urls)} tracks")
+                return True
+
+        # Fallback: try YouTube search with the URL as query (may not work well)
+        logger.info("No YouTube URLs from spotdl, trying direct YouTube search")
         cli_cmd = [
             sys.executable,
             "-m",
@@ -113,7 +150,7 @@ def try_yt_dlp_search(url, output_folder):
             "--audio-format", "mp3",
             "--audio-quality", "0",
             "-o", f"{output_folder}/%(artist)s/%(album)s/%(track_number)s - %(title)s.%(ext)s",
-            f"ytsearch:{url}",  # Search YouTube for the URL
+            f"ytsearch:{url}",
         ]
         logger.info(f"Running: {' '.join(cli_cmd)}")
         result = subprocess.run(cli_cmd, capture_output=True, text=True, timeout=300)
@@ -125,6 +162,9 @@ def try_yt_dlp_search(url, output_folder):
             logger.info("yt-dlp completed successfully")
             return True
         logger.info(f"yt-dlp failed with return code {result.returncode}")
+        return False
+    except subprocess.TimeoutExpired:
+        logger.info("yt-dlp timed out")
         return False
     except Exception as e:
         logger.info(f"yt-dlp search failed: {e}")
