@@ -63,12 +63,10 @@ def process_email(subject, body, output_folder):
         sys.executable,
         "-m",
         "spotdl",
+        "download",
+        body,
         "--output",
         f"{output_folder}/{{artist}}/{{album}}/{{track-number}} - {{title}}.{{output-ext}}",
-        body,
-        "--lyrics",
-        "genius",
-        "musixmatch",
     ]
 
     """cli_cmd = [
