@@ -57,7 +57,13 @@ def try_spotdl(url, output_folder):
         f"{output_folder}/{{artist}}/{{album}}/{{track-number}} - {{title}}.{{output-ext}}",
     ]
     logger.info(f"Running: {' '.join(cli_cmd)}")
-    result = subprocess.run(cli_cmd, capture_output=True, text=True)
+    result = subprocess.run(cli_cmd, capture_output=True, text=True, timeout=300)
+
+    # Log the output
+    if result.stdout:
+        logger.info(f"spotdl stdout: {result.stdout[:500]}")
+    if result.stderr:
+        logger.info(f"spotdl stderr: {result.stderr[:500]}")
 
     # Check for rate limit or API errors
     if result.returncode != 0:
@@ -68,8 +74,11 @@ def try_spotdl(url, output_folder):
         if "SpotifyException" in error_output or "user may not be registered" in error_output:
             logger.info(f"spotdl failed with Spotify API error")
             return False
+        logger.info(f"spotdl failed with return code {result.returncode}")
+        return False
 
-    return result.returncode == 0
+    logger.info(f"spotdl completed successfully")
+    return True
 
 
 def try_yt_dlp_search(url, output_folder):
@@ -94,7 +103,15 @@ def try_yt_dlp_search(url, output_folder):
         ]
         logger.info(f"Running: {' '.join(cli_cmd)}")
         result = subprocess.run(cli_cmd, capture_output=True, text=True, timeout=300)
-        return result.returncode == 0
+        if result.stdout:
+            logger.info(f"yt-dlp stdout: {result.stdout[:500]}")
+        if result.stderr:
+            logger.info(f"yt-dlp stderr: {result.stderr[:500]}")
+        if result.returncode == 0:
+            logger.info("yt-dlp completed successfully")
+            return True
+        logger.info(f"yt-dlp failed with return code {result.returncode}")
+        return False
     except Exception as e:
         logger.info(f"yt-dlp search failed: {e}")
         return False
