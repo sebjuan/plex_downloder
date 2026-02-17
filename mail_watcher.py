@@ -57,7 +57,11 @@ def try_spotdl(url, output_folder):
         f"{output_folder}/{{artist}}/{{album}}/{{track-number}} - {{title}}.{{output-ext}}",
     ]
     logger.info(f"Running: {' '.join(cli_cmd)}")
-    result = subprocess.run(cli_cmd, capture_output=True, text=True, timeout=300)
+    try:
+        result = subprocess.run(cli_cmd, capture_output=True, text=True, timeout=30)
+    except subprocess.TimeoutExpired:
+        logger.info("spotdl timed out after 30s (likely rate limited)")
+        return False
 
     # Log the output
     if result.stdout:
