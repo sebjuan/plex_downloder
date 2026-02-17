@@ -72,29 +72,6 @@ def try_spotdl(url, output_folder):
     return result.returncode == 0
 
 
-def try_spotify_dl_node(url, output_folder):
-    """Method 2: Try spotify-dl (NodeJS)"""
-    logger.info("Trying Method 2: spotify-dl (NodeJS)")
-    cli_cmd = [
-        "spotify-dl",
-        "-o", output_folder,
-        url,
-    ]
-    logger.info(f"Running: {' '.join(cli_cmd)}")
-    try:
-        result = subprocess.run(cli_cmd, capture_output=True, text=True, timeout=600)
-        if result.returncode == 0:
-            return True
-        logger.info(f"spotify-dl (NodeJS) failed: {result.stderr[:200] if result.stderr else 'no error output'}")
-        return False
-    except FileNotFoundError:
-        logger.info("spotify-dl (NodeJS) not installed")
-        return False
-    except subprocess.TimeoutExpired:
-        logger.info("spotify-dl (NodeJS) timed out")
-        return False
-
-
 def try_yt_dlp_search(url, output_folder):
     """Method 3: Extract track info and search YouTube directly with yt-dlp"""
     logger.info("Trying Method 3: yt-dlp direct search")
@@ -132,7 +109,6 @@ def process_email(subject, body, output_folder):
     # List of download methods to try in order
     methods = [
         ("spotdl", try_spotdl),
-        ("spotify-dl (NodeJS)", try_spotify_dl_node),
         ("yt-dlp search", try_yt_dlp_search),
     ]
 
