@@ -69,19 +69,29 @@ def try_spotdl(url, output_folder):
     if result.stderr:
         logger.info(f"spotdl stderr: {result.stderr[:500]}")
 
-    # Check for rate limit or API errors
+    # Check for rate limit or API errors (even if return code is 0)
+    all_output = (result.stderr or "") + (result.stdout or "")
+
+    # Check for rate limit messages
+    if "rate" in all_output.lower() and "limit" in all_output.lower():
+        logger.info("spotdl hit rate limit (detected in output)")
+        return False
+    if "Retry will occur after" in all_output:
+        logger.info("spotdl hit rate limit (retry message detected)")
+        return False
+    if "403" in all_output:
+        logger.info("spotdl got 403 error")
+        return False
+    if "SpotifyException" in all_output or "user may not be registered" in all_output:
+        logger.info("spotdl failed with Spotify API error")
+        return False
+
+    # Check return code
     if result.returncode != 0:
-        error_output = result.stderr + result.stdout
-        if "rate" in error_output.lower() or "403" in error_output or "limit" in error_output.lower():
-            logger.info(f"spotdl failed with rate limit/API error")
-            return False
-        if "SpotifyException" in error_output or "user may not be registered" in error_output:
-            logger.info(f"spotdl failed with Spotify API error")
-            return False
         logger.info(f"spotdl failed with return code {result.returncode}")
         return False
 
-    logger.info(f"spotdl completed successfully")
+    logger.info("spotdl completed successfully")
     return True
 
 
