@@ -7,6 +7,7 @@ import shutil  # For moving files
 import subprocess
 from datetime import datetime
 import argparse
+import sys
 
 import logging
 
@@ -59,7 +60,7 @@ def process_email(subject, body, output_folder):
     logger.info(f"Processing URL: {body}")
 
     cli_cmd = [
-        "python",
+        sys.executable,
         "-m",
         "spotdl",
         "--output",

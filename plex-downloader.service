@@ -1,0 +1,13 @@
+[Unit]
+Description=Plex Spotify Downloader Setup
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=seb
+ExecStart=/home/seb/pi_startup.sh
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
